@@ -20,7 +20,14 @@ const ensureDir = dir => (fs.existsSync(dir) ? dir : (fs.mkdirSync(dir), dir));
 const getExtensions = () => {
   try {
     // 执行命令获取插件列表
-    const output = execSync("code --list-extensions --show-versions", { encoding: "utf-8" });
+    // 如果文件plugins.txt存在，则优先从文件获取
+    output = "";
+    if (fs.existsSync("plugins.txt")) {
+      output = fs.readFileSync("plugins.txt", "utf-8");
+    } else {
+      output = execSync("code --list-extensions --show-versions", { encoding: "utf-8" });
+    }
+
     return output
       .split("\n")
       .filter(Boolean)
@@ -107,7 +114,12 @@ const downloadAllExtensions = async (extensions, downloadDir) => {
 
     const startTime = Date.now();
     try {
-      await downloadVsix(url, dest);
+      // check if already exists
+      if (!fs.existsSync(dest)) {
+        await downloadVsix(url, dest);
+      } else {
+        console.log(`文件已存在: ${filename}`);
+      }
       const endTime = Date.now();
       const time = endTime - startTime;
 
